@@ -25,7 +25,7 @@ services:
     environment:
       MYSQL_DATABASE: auth_service
       MYSQL_USER: auth_user
-      MYSQL_PASSWORD: secret
+      MYSQL_PASSWORD: 1111
       MYSQL_ROOT_PASSWORD: 1111
 
   nginx:
