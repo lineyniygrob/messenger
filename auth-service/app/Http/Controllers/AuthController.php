@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\RegisterRequest;
 use Illuminate\Http\Request;
 use App\Models\User;
 use Illuminate\Http\Response;
@@ -11,17 +12,10 @@ use Illuminate\Validation\ValidationException;
 
 class AuthController extends Controller
 {
-    public function register(Request $request)
+    public function register(RegisterRequest $request)
     {
-        try {
-            $validate = $request->validate([
-                'login' => 'required|min:3|string',
-                'email' => 'required|unique:users|email',
-                'password' => 'required|min:5|string',
-            ]);
-        } catch (ValidationException $e) {
-            dd($e->errors());
-        }
+        $validate = $request->validated();
+
         $user = User::create([
             'login' => $validate['login'],
             'email' => $validate['email'],
@@ -34,24 +28,41 @@ class AuthController extends Controller
         ], 201);
     }
 
-    public function authentication(Request $request)
+    public function login(Request $request)
     {
         $validate = $request->validate([
-            'email' => 'required',
-            'password' => 'required',
+            'email' => 'required|email',
+            'password' => 'required|string',
         ]);
 
         $user = User::where('email', $validate['email'])->first();
 
-        $token = $user->createToken('auth_token');
-
-        if(Hash::check($validate['password'], $user->password))
+        if(!$user)
         {
             return response()->json([
-                'token' => $token->plainTextToken,
-                'message' => 'Аунтефикация прошла успешно',
-            ]);
+                'message' => 'Неверно введены данные',
+                'error' => 'INVALID_CREDENTIALS',
+            ], 401);
         }
+
+        if(!Hash::check($validate['password'], $user->password))
+        {
+            return response()->json([
+                'message' => 'Неверно введены данные',
+                'error' => 'INVALID_CREDENTIALS',
+            ], 401);
+        }
+
+        $token = $user->createToken('auth_token');
+        return response()->json([
+            'token' => $token->plainTextToken,
+            'message' => 'Выполнен вход',
+            'user' => [
+                'id' => $user->id,
+                'login' => $user->login,
+                'email' => $user->email,
+            ],
+        ], 200);
     } 
 
     public function logout(Request $request)
