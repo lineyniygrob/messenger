@@ -41,4 +41,9 @@ class ProfileController extends Controller
         dd($user);
 
     }
+
+    public function test(Request $request)
+    {
+        dd($request->user()->getAllPermissions());
+    }
 }
