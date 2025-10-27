@@ -8,16 +8,12 @@ COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
 
 WORKDIR /var/www/laravel
 
-# Копируем всё сразу
-COPY ./auth-service .
+COPY ./user-service .
 
-# Устанавливаем зависимости (artisan уже есть)
 RUN composer install --no-dev --optimize-autoloader --no-interaction
 
-# Настраиваем права
 RUN chown -R www-data:www-data /var/www/laravel/storage /var/www/laravel/bootstrap/cache \
     && chmod -R 775 /var/www/laravel/storage /var/www/laravel/bootstrap/cache
 
 EXPOSE 9000
 CMD ["php-fpm"]
-
