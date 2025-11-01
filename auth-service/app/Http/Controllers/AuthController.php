@@ -8,7 +8,8 @@ use App\Models\User;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Validation\ValidationException;
+use Tymon\JWTAuth\Exceptions\JWTException;
+use Tymon\JWTAuth\Facades\JWTAuth;
 
 class AuthController extends Controller
 {
@@ -22,54 +23,65 @@ class AuthController extends Controller
             'password' => Hash::make($validate['password']),
         ]);
 
-        return response()->json([
-            'login' => $user->login,
-            'redirect' => '/home'
-        ], 201);
+        $token = JWTAuth::fromUser($user);
+
+        return $this->respondWithToken($token, $user, Response::HTTP_CREATED);
     }
 
     public function login(Request $request)
     {
-        $validate = $request->validate([
+        $credentials = $request->validate([
             'email' => 'required|email',
             'password' => 'required|string',
         ]);
 
-        $user = User::where('email', $validate['email'])->first();
-
-        if(!$user)
-        {
+        if (! $token = Auth::guard('api')->attempt($credentials)) {
             return response()->json([
                 'message' => 'Неверно введены данные',
                 'error' => 'INVALID_CREDENTIALS',
-            ], 401);
+            ], Response::HTTP_UNAUTHORIZED);
         }
 
-        if(!Hash::check($validate['password'], $user->password))
-        {
+        return $this->respondWithToken($token, Auth::guard('api')->user());
+    } 
+
+    public function logout(Request $request)
+    {
+        try {
+            Auth::guard('api')->logout();
+        } catch (JWTException $exception) {
             return response()->json([
-                'message' => 'Неверно введены данные',
-                'error' => 'INVALID_CREDENTIALS',
-            ], 401);
+                'message' => 'Не удалось завершить сессию',
+                'error' => 'LOGOUT_FAILED',
+            ], Response::HTTP_INTERNAL_SERVER_ERROR);
         }
 
-        $token = $user->createToken('auth_token');
         return response()->json([
-            'token' => $token->plainTextToken,
-            'message' => 'Выполнен вход',
+            'message' => 'Выход выполнен',
+        ]);
+    }
+
+    public function refresh()
+    {
+        $user = Auth::guard('api')->user();
+        $newToken = Auth::guard('api')->refresh();
+
+        return $this->respondWithToken($newToken, $user);
+    }
+
+    protected function respondWithToken(string $token, ?User $user = null, int $status = Response::HTTP_OK)
+    {
+        $user ??= Auth::guard('api')->setToken($token)->user();
+
+        return response()->json([
+            'token' => $token,
+            'token_type' => 'bearer',
+            'expires_in' => Auth::guard('api')->factory()->getTTL() * 60,
             'user' => [
                 'id' => $user->id,
                 'login' => $user->login,
                 'email' => $user->email,
             ],
-        ], 200);
-    } 
-
-    public function logout(Request $request)
-    {
-        $request->user()->tokens()->delete();
-        return response()->json([
-            'message' => 'Выход выполнен'
-        ]);
+        ], $status);
     }
 }
