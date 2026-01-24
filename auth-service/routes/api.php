@@ -17,3 +17,4 @@ Route::middleware('auth:api')->group(function () {
     Route::post('/test', [ProfileController::class, 'test']);
     Route::post('refresh', [AuthController::class, 'refresh']);
 });
+
