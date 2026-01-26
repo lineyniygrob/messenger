@@ -22,7 +22,12 @@ class AuthController extends Controller
             'password' => Hash::make($validate['password']),
         ]);
 
-        
+        $token = $user->createToken('auth_token');
+
+        return response()->json([
+            "token" => $token->plainTextToken,
+        ], 200);
+
     }
 
     public function login(Request $request)
@@ -33,11 +38,16 @@ class AuthController extends Controller
         ]);
 
         
-    } 
+    }
 
     public function logout(Request $request)
     {
-        
+        $user = $request->user();
+        $user->currentAccessToken()->delete();
+
+        return response()->json([
+            'message' => 'Вы вышли из аккаунта',
+        ], 200);
     }
 
 }
