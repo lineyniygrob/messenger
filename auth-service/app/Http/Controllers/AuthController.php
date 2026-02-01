@@ -2,42 +2,43 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\LoginRequest;
 use App\Http\Requests\RegisterRequest;
+use App\Services\LoginService;
+use App\Services\RegisterService;
 use Illuminate\Http\Request;
-use App\Models\User;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Hash;
+
 
 
 class AuthController extends Controller
 {
+    public function __construct(
+        private RegisterService $registerService,
+        private LoginService $loginService
+    ){}   
+
     public function register(RegisterRequest $request)
     {
         $validate = $request->validated();
-
-        $user = User::create([
-            'login' => $validate['login'],
-            'email' => $validate['email'],
-            'password' => Hash::make($validate['password']),
-        ]);
-
-        $token = $user->createToken('auth_token');
+        $token = $this->registerService->register($validate);
 
         return response()->json([
             "token" => $token->plainTextToken,
-        ], 200);
+        ], 201);
 
     }
 
-    public function login(Request $request)
+    public function login(LoginRequest $request)
     {
-        $credentials = $request->validate([
-            'email' => 'required|email',
-            'password' => 'required|string',
-        ]);
+        $credentials = $request->validated();
+        $token = $this->loginService->login($credentials);
 
-        
+        return response()->json([
+            'message' => 'авторизация успешна',
+            'token' => $token,
+        ], 200);
     }
 
     public function logout(Request $request)
@@ -50,6 +51,12 @@ class AuthController extends Controller
         ], 200);
     }
 
+    public function test()
+    {
+        dd(Auth::check());
+    }
+
 }
+
 
 
