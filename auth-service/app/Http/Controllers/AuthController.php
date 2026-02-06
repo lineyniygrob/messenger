@@ -54,7 +54,7 @@ class AuthController extends Controller
 
     public function test()
     {
-        dd(Auth::check());
+        return response()->json(['message' => 'auth.test'], 200);
     }
 
 }
