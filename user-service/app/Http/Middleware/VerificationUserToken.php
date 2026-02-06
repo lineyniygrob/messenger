@@ -26,7 +26,15 @@ class VerificationUserToken
         ->timeout(10)
         ->withToken($request->bearerToken())
         ->withHeaders(['X-Internal-Key' => config('session.internal_key')])
+        ->acceptJson()
         ->get('http://auth-web/api/internal');
+        
+        if(!$http->successful()){
+            if($http->unauthorized() || $http->forbidden()){
+                return response()->json(['message' => 'UNAUTHORIZED'], $http->status());
+            }
+            return response()->json(['message' => 'AUTH_UNAVAILABLE'], $http->status());
+        }
 
         $request->attributes->set('user', $http->json());
         return $next($request);
