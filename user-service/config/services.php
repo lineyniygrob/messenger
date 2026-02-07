@@ -35,4 +35,9 @@ return [
         ],
     ],
 
+    'auth_service' =>[
+        'internal_key' => env('AUTH_INTERNAL_KEY', false),
+        'base_url' => env('AUTH_BASE_URL', false)
+    ],
+
 ];

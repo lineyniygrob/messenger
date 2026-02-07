@@ -213,6 +213,5 @@ return [
     */
 
     'partitioned' => env('SESSION_PARTITIONED_COOKIE', false),
-    'internal_key' => env('AUTH_INTERNAL_KEY', false)
 
 ];

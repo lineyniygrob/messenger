@@ -25,9 +25,10 @@ class VerificationUserToken
         $http = Http::connectTimeout(10)
         ->timeout(10)
         ->withToken($request->bearerToken())
-        ->withHeaders(['X-Internal-Key' => config('session.internal_key')])
+        ->withHeaders(['X-Internal-Key' => config('services.auth_service.internal_key')])
         ->acceptJson()
-        ->get('http://auth-web/api/internal');
+        ->baseUrl(config('services.auth_service.base_url'))
+        ->get('api/internal');
         
         if(!$http->successful()){
             if($http->unauthorized() || $http->forbidden()){

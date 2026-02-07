@@ -35,4 +35,6 @@ return [
         ],
     ],
 
+    'internal_key' => env('AUTH_INTERNAL_KEY', false)
+
 ];

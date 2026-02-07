@@ -17,7 +17,7 @@ class InternalRequestAuth
     {
         $internal_key = $request->header('X-Internal-Key');
 
-        if (!$internal_key || $internal_key != config('session.internal_key')) 
+        if (!$internal_key || $internal_key != config('services.internal_key')) 
         {
             return response()->json([
                 'message' => 'Forbidden',
